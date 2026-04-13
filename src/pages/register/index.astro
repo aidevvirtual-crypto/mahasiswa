@@ -1,0 +1,820 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import VideoRecorder from '../../components/VideoRecorder.astro';
+
+const { user } = Astro.locals;
+const registrationId = Astro.url.searchParams.get('id') || '';
+
+const steps = [
+  { number: 1, title: 'Personal Info', description: 'Basic information' },
+  { number: 2, title: 'Background', description: 'Your history' },
+  { number: 3, title: 'Portfolio', description: 'Documents & video' },
+  { number: 4, title: 'Review', description: 'Submit application' }
+];
+---
+
+<BaseLayout title="Registration | Mahasiswa">
+  <main class="register-page">
+    <header class="register-header">
+      <a href="/" class="back-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Home
+      </a>
+      <div class="user-info">
+        {user?.picture && <img src={user.picture} alt="" class="user-avatar" />}
+        <span>{user?.name || 'User'}</span>
+      </div>
+    </header>
+    
+    <div class="progress-container">
+      <div class="progress-steps">
+        {steps.map((step) => (
+          <div class="step" data-step={step.number}>
+            <div class="step-indicator">
+              <span class="step-number">{step.number}</span>
+              <svg class="step-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div class="step-content">
+              <span class="step-title">{step.title}</span>
+              <span class="step-desc">{step.description}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+    
+    <form class="register-form" id="register-form" data-registration-id={registrationId}>
+      <div class="form-step active" data-step="1">
+        <h2>Personal Information</h2>
+        <p class="step-intro">Enter your basic information for registration.</p>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" name="email" class="form-input" value={user?.email || ''} readonly required />
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="fullName">Full Name</label>
+            <input type="text" id="fullName" name="fullName" class="form-input" value={user?.name || ''} required />
+          </div>
+        </div>
+        
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label class="form-label" for="nik">NIK (National ID)</label>
+            <input type="text" id="nik" name="nik" class="form-input" placeholder="16-digit NIK" maxlength="16" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dob">Date of Birth</label>
+            <input type="date" id="dob" name="dob" class="form-input" required />
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-step" data-step="2">
+        <h2>Background Information</h2>
+        <p class="step-intro">Tell us about your current status and background.</p>
+        
+        <div class="form-group">
+          <label class="form-label">Registration Type</label>
+          <div class="radio-cards">
+            <label class="radio-card">
+              <input type="radio" name="registrationType" value="mahasiswa" required />
+              <div class="radio-card-content">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                  <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                </svg>
+                <span>Mahasiswa</span>
+                <small>University/College Student</small>
+              </div>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="registrationType" value="entrepreneur" />
+              <div class="radio-card-content">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                <span>Entrepreneur</span>
+                <small>Business Owner</small>
+              </div>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="registrationType" value="umum" />
+              <div class="radio-card-content">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Umum</span>
+                <small>General Public</small>
+              </div>
+            </label>
+          </div>
+        </div>
+        
+        <div class="conditional-section" id="mahasiswa-section" style="display: none;">
+          <div class="form-group">
+            <label class="form-label" for="institutionName">Institution Name</label>
+            <input type="text" id="institutionName" name="institutionName" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="institutionAddress">Institution Address</label>
+            <textarea id="institutionAddress" name="institutionAddress" class="form-input" rows="3"></textarea>
+          </div>
+        </div>
+        
+        <div class="conditional-section" id="entrepreneur-section" style="display: none;">
+          <div class="form-group">
+            <label class="form-label" for="businessName">Business Name</label>
+            <input type="text" id="businessName" name="businessName" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="businessAddress">Business Address</label>
+            <textarea id="businessAddress" name="businessAddress" class="form-input" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-step" data-step="3">
+        <h2>Portfolio & Documents</h2>
+        <p class="step-intro">Upload your proposal and record a video statement.</p>
+        
+        <div class="form-group">
+          <label class="form-label">Proposal Document (PDF)</label>
+          <div class="upload-zone" id="proposal-upload">
+            <input type="file" id="proposalFile" name="proposalFile" accept=".pdf" class="upload-input" />
+            <div class="upload-content">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+              <p>Drag & drop PDF here or <span class="browse-link">browse</span></p>
+              <small>Max file size: 10MB</small>
+            </div>
+            <div class="upload-progress" id="proposal-progress"></div>
+          </div>
+          <div class="uploaded-file" id="proposal-file-info" style="display: none;"></div>
+          <input type="hidden" name="proposalPath" id="proposalPath" />
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Video Statement</label>
+          <VideoRecorder registrationId={registrationId} />
+        </div>
+      </div>
+      
+      <div class="form-step" data-step="4">
+        <h2>Review & Submit</h2>
+        <p class="step-intro">Review your information before submitting.</p>
+        
+        <div class="review-section" id="review-section">
+          <div class="review-card">
+            <h3>Personal Information</h3>
+            <dl class="review-list">
+              <div><dt>Email</dt><dd id="review-email">-</dd></div>
+              <div><dt>Full Name</dt><dd id="review-fullName">-</dd></div>
+              <div><dt>NIK</dt><dd id="review-nik">-</dd></div>
+              <div><dt>Date of Birth</dt><dd id="review-dob">-</dd></div>
+            </dl>
+          </div>
+          
+          <div class="review-card">
+            <h3>Background</h3>
+            <dl class="review-list">
+              <div><dt>Type</dt><dd id="review-type">-</dd></div>
+              <div><dt id="review-institution-label" style="display:none;">Institution/Business</dt><dd id="review-institution">-</dd></div>
+            </dl>
+          </div>
+          
+          <div class="review-card">
+            <h3>Documents</h3>
+            <dl class="review-list">
+              <div><dt>Proposal</dt><dd id="review-proposal">-</dd></div>
+              <div><dt>Video Statement</dt><dd id="review-video">-</dd></div>
+            </dl>
+          </div>
+        </div>
+        
+        <div class="terms-checkbox">
+          <label>
+            <input type="checkbox" name="terms" required />
+            <span>I confirm that all information provided is accurate and complete.</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="form-navigation">
+        <button type="button" class="btn btn-outline" id="prev-btn" style="display: none;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          Previous
+        </button>
+        <button type="button" class="btn btn-primary" id="next-btn">
+          Next
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+        <button type="submit" class="btn btn-primary" id="submit-btn" style="display: none;">
+          Submit Application
+        </button>
+      </div>
+    </form>
+  </main>
+</BaseLayout>
+
+<style>
+  .register-page {
+    min-height: 100vh;
+    background: var(--color-background);
+  }
+
+  .register-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-outline-variant);
+  }
+
+  .back-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  .back-link:hover {
+    color: var(--color-primary);
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.875rem;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .progress-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 24px 24px;
+  }
+
+  .progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    position: relative;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+  }
+
+  .step.active, .step.completed {
+    opacity: 1;
+  }
+
+  .step-indicator {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-surface-container);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+  }
+
+  .step.active .step-indicator {
+    background: var(--color-primary);
+    color: white;
+  }
+
+  .step.completed .step-indicator {
+    background: var(--color-success);
+    color: white;
+  }
+
+  .step-check {
+    display: none;
+  }
+
+  .step.completed .step-number {
+    display: none;
+  }
+
+  .step.completed .step-check {
+    display: block;
+  }
+
+  .step-content {
+    text-align: center;
+  }
+
+  .step-title {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .step-desc {
+    display: none;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+
+  @media (min-width: 640px) {
+    .step-desc {
+      display: block;
+    }
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--color-surface-container);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--color-primary);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  .register-form {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+  }
+
+  .form-step {
+    display: none;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .form-step.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .form-step h2 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    color: var(--color-primary);
+  }
+
+  .step-intro {
+    color: var(--color-text-secondary);
+    margin-bottom: 32px;
+    font-size: 0.9375rem;
+  }
+
+  .form-row {
+    margin-bottom: 20px;
+  }
+
+  .form-row.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 480px) {
+    .form-row.two-col {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .radio-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 640px) {
+    .radio-cards {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .radio-card {
+    cursor: pointer;
+  }
+
+  .radio-card input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .radio-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 16px;
+    background: var(--color-surface-container);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+
+  .radio-card-content svg {
+    color: var(--color-primary);
+  }
+
+  .radio-card-content span {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .radio-card-content small {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+
+  .radio-card input:checked + .radio-card-content {
+    border-color: var(--color-primary);
+    background: rgba(26, 54, 93, 0.05);
+  }
+
+  .upload-zone {
+    position: relative;
+    border: 2px dashed var(--color-outline-variant);
+    border-radius: var(--radius-md);
+    padding: 40px 20px;
+    text-align: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .upload-zone:hover {
+    border-color: var(--color-primary);
+    background: rgba(26, 54, 93, 0.02);
+  }
+
+  .upload-zone.dragover {
+    border-color: var(--color-primary);
+    background: rgba(26, 54, 93, 0.05);
+  }
+
+  .upload-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .upload-content svg {
+    color: var(--color-outline);
+    margin-bottom: 12px;
+  }
+
+  .upload-content p {
+    color: var(--color-text-secondary);
+    font-size: 0.9375rem;
+  }
+
+  .browse-link {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .upload-content small {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+
+  .uploaded-file {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: rgba(47, 133, 90, 0.1);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .file-name {
+    font-weight: 500;
+    color: var(--color-success);
+  }
+
+  .remove-file {
+    color: var(--color-error);
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+
+  .review-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .review-card {
+    background: var(--color-surface-container);
+    padding: 20px;
+    border-radius: var(--radius-md);
+  }
+
+  .review-card h3 {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .review-list > div {
+    display: flex;
+    gap: 12px;
+  }
+
+  .review-list dt {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    min-width: 100px;
+  }
+
+  .review-list dd {
+    color: var(--color-text);
+    flex: 1;
+  }
+
+  .terms-checkbox {
+    margin-top: 24px;
+  }
+
+  .terms-checkbox label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .terms-checkbox input {
+    margin-top: 4px;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-primary);
+  }
+
+  .form-navigation {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  .form-navigation .btn {
+    flex: 1;
+  }
+
+  .conditional-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-outline-variant);
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('register-form');
+    const steps = document.querySelectorAll('.form-step');
+    const progressSteps = document.querySelectorAll('.progress-container .step');
+    const progressFill = document.getElementById('progress-fill');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    let currentStep = 1;
+    const totalSteps = steps.length;
+    
+    function updateProgress() {
+      const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+      progressFill.style.width = `${progress}%`;
+      
+      progressSteps.forEach((step, idx) => {
+        const stepNum = idx + 1;
+        if (stepNum < currentStep) {
+          step.classList.add('completed');
+          step.classList.remove('active');
+        } else if (stepNum === currentStep) {
+          step.classList.add('active');
+          step.classList.remove('completed');
+        } else {
+          step.classList.remove('active', 'completed');
+        }
+      });
+      
+      prevBtn.style.display = currentStep > 1 ? 'flex' : 'none';
+      nextBtn.style.display = currentStep < totalSteps ? 'flex' : 'none';
+      submitBtn.style.display = currentStep === totalSteps ? 'flex' : 'none';
+    }
+    
+    function validateStep(step) {
+      const stepEl = document.querySelector(`.form-step[data-step="${step}"]`);
+      const requiredInputs = stepEl.querySelectorAll('[required]');
+      let valid = true;
+      
+      requiredInputs.forEach(input => {
+        if (!input.value.trim()) {
+          valid = false;
+          input.classList.add('error');
+        } else {
+          input.classList.remove('error');
+        }
+      });
+      
+      return valid;
+    }
+    
+    function populateReview() {
+      document.getElementById('review-email').textContent = (document.getElementById('email') as HTMLInputElement)?.value || '-';
+      document.getElementById('review-fullName').textContent = (document.getElementById('fullName') as HTMLInputElement)?.value || '-';
+      document.getElementById('review-nik').textContent = (document.getElementById('nik') as HTMLInputElement)?.value || '-';
+      document.getElementById('review-dob').textContent = (document.getElementById('dob') as HTMLInputElement)?.value || '-';
+      
+      const regType = (document.querySelector('input[name="registrationType"]:checked') as HTMLInputElement)?.value || '-';
+      document.getElementById('review-type').textContent = regType.charAt(0).toUpperCase() + regType.slice(1);
+      
+      const proposalPath = (document.getElementById('proposalPath') as HTMLInputElement)?.value;
+      document.getElementById('review-proposal').textContent = proposalPath ? 'Uploaded' : 'Not uploaded';
+      
+      const videoBlob = (document.getElementById('video-blob') as HTMLInputElement)?.value;
+      document.getElementById('review-video').textContent = videoBlob ? 'Recorded' : 'Not recorded';
+    }
+    
+    nextBtn.addEventListener('click', () => {
+      if (validateStep(currentStep)) {
+        if (currentStep === totalSteps - 1) {
+          populateReview();
+        }
+        currentStep++;
+        steps.forEach(s => s.classList.remove('active'));
+        document.querySelector(`.form-step[data-step="${currentStep}"]`)?.classList.add('active');
+        updateProgress();
+      }
+    });
+    
+    prevBtn.addEventListener('click', () => {
+      if (currentStep > 1) {
+        currentStep--;
+        steps.forEach(s => s.classList.remove('active'));
+        document.querySelector(`.form-step[data-step="${currentStep}"]`)?.classList.add('active');
+        updateProgress();
+      }
+    });
+    
+    const radioCards = document.querySelectorAll('input[name="registrationType"]');
+    const mahasiswaSection = document.getElementById('mahasiswa-section');
+    const entrepreneurSection = document.getElementById('entrepreneur-section');
+    
+    radioCards.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const value = (e.target as HTMLInputElement).value;
+        mahasiswaSection.style.display = value === 'mahasiswa' ? 'block' : 'none';
+        entrepreneurSection.style.display = value === 'entrepreneur' ? 'block' : 'none';
+      });
+    });
+    
+    const uploadZone = document.getElementById('proposal-upload');
+    const proposalInput = document.getElementById('proposalFile') as HTMLInputElement;
+    const proposalPathInput = document.getElementById('proposalPath') as HTMLInputElement;
+    const proposalFileInfo = document.getElementById('proposal-file-info');
+    
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+    
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragover');
+    });
+    
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        handleFile(files[0]);
+      }
+    });
+    
+    proposalInput.addEventListener('change', (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files.length) {
+        handleFile(files[0]);
+      }
+    });
+    
+    function handleFile(file: File) {
+      const validTypes = ['application/pdf'];
+      if (!validTypes.includes(file.type)) {
+        alert('Please upload a PDF file');
+        return;
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      
+      proposalPathInput.value = file.name;
+      proposalFileInfo.style.display = 'flex';
+      (proposalFileInfo as HTMLElement).innerHTML = `
+        <span class="file-name">${file.name}</span>
+        <span class="remove-file" onclick="removeFile()">Remove</span>
+      `;
+    }
+    
+    (window as any).removeFile = () => {
+      proposalInput.value = '';
+      proposalPathInput.value = '';
+      proposalFileInfo.style.display = 'none';
+    };
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form as HTMLFormElement);
+      const data = Object.fromEntries(formData.entries());
+      
+      try {
+        const response = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+          window.location.href = '/register/success';
+        } else {
+          alert('Submission failed. Please try again.');
+        }
+      } catch (err) {
+        console.error('Submit error:', err);
+        alert('An error occurred. Please try again.');
+      }
+    });
+  });
+</script>

@@ -1,0 +1,420 @@
+---
+interface Props {
+  registrationId: string;
+  maxDuration?: number;
+}
+
+const { registrationId, maxDuration = 120 } = Astro.props;
+---
+
+<div class="video-recorder" data-registration-id={registrationId} data-max-duration={maxDuration}>
+  <div class="recorder-container">
+    <div class="video-preview">
+      <video id="camera-preview" autoplay muted playsinline></video>
+      <div class="recording-indicator" id="recording-indicator">
+        <span class="rec-dot"></span>
+        <span class="rec-text">REC</span>
+        <span class="rec-timer" id="rec-timer">00:00</span>
+      </div>
+    </div>
+    
+    <div class="recorder-controls">
+      <div class="countdown-overlay" id="countdown-overlay">
+        <span class="countdown-number" id="countdown-number">3</span>
+      </div>
+      
+      <div class="control-buttons">
+        <button type="button" class="btn btn-primary record-btn" id="record-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="8"/>
+          </svg>
+          <span>Record Statement</span>
+        </button>
+        
+        <button type="button" class="btn btn-secondary" id="retake-btn" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 4v6h6"/>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          </svg>
+          Retake
+        </button>
+        
+        <button type="button" class="btn btn-outline" id="preview-btn" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Preview
+        </button>
+      </div>
+      
+      <div class="requirements">
+        <h4>Final Submission Requirements</h4>
+        <ul>
+          <li class="checklist-item" data-checked="false">
+            <span class="check-icon">○</span>
+            Duration: 1-2 minutes
+          </li>
+          <li class="checklist-item" data-checked="false">
+            <span class="check-icon">○</span>
+            Clear audio without background noise
+          </li>
+          <li class="checklist-item" data-checked="false">
+            <span class="check-icon">○</span>
+            Face clearly visible in frame
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div class="video-hidden" id="video-hidden">
+    <video id="recorded-video" controls></video>
+  </div>
+  
+  <input type="hidden" name="videoBlob" id="video-blob" />
+</div>
+
+<style>
+  .video-recorder {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .recorder-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .video-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: var(--color-surface-container);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .video-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+
+  .recording-indicator {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: rgba(186, 26, 26, 0.9);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .recording-indicator.active {
+    display: flex;
+  }
+
+  .rec-dot {
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .rec-timer {
+    font-family: var(--font-mono);
+  }
+
+  .countdown-overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: var(--radius-lg);
+    z-index: 10;
+  }
+
+  .countdown-overlay.active {
+    display: flex;
+  }
+
+  .countdown-number {
+    font-size: 6rem;
+    font-weight: 800;
+    color: white;
+    animation: countdownPulse 1s infinite;
+  }
+
+  @keyframes countdownPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .recorder-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .control-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .record-btn {
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .record-btn.recording {
+    background: var(--color-error);
+  }
+
+  .record-btn.recording:hover {
+    background: #a01515;
+  }
+
+  .requirements {
+    background: var(--color-surface-container);
+    padding: 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .requirements h4 {
+    font-size: 0.875rem;
+    margin-bottom: 12px;
+    color: var(--color-text);
+  }
+
+  .requirements ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    transition: all 0.2s ease;
+  }
+
+  .checklist-item.checked {
+    color: var(--color-success);
+  }
+
+  .check-icon {
+    font-size: 1rem;
+    color: var(--color-outline);
+  }
+
+  .checklist-item.checked .check-icon {
+    color: var(--color-success);
+  }
+
+  .video-hidden {
+    display: none;
+    margin-top: 20px;
+  }
+
+  .video-hidden.active {
+    display: block;
+  }
+
+  .video-hidden video {
+    width: 100%;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-container);
+  }
+</style>
+
+<script>
+  class VideoRecorder {
+    constructor(element) {
+      this.element = element;
+      this.preview = element.querySelector('#camera-preview');
+      this.recordedVideo = element.querySelector('#recorded-video');
+      this.recordBtn = element.querySelector('#record-btn');
+      this.retakeBtn = element.querySelector('#retake-btn');
+      this.previewBtn = element.querySelector('#preview-btn');
+      this.recordingIndicator = element.querySelector('#recording-indicator');
+      this.countdownOverlay = element.querySelector('#countdown-overlay');
+      this.countdownNumber = element.querySelector('#countdown-number');
+      this.recTimer = element.querySelector('#rec-timer');
+      this.videoHidden = element.querySelector('#video-hidden');
+      this.videoBlob = element.querySelector('#video-blob');
+      this.maxDuration = parseInt(element.dataset.maxDuration || '120');
+      
+      this.mediaStream = null;
+      this.mediaRecorder = null;
+      this.chunks = [];
+      this.isRecording = false;
+      this.countdownValue = 3;
+      this.timerInterval = null;
+      this.recordingTime = 0;
+      
+      this.init();
+    }
+    
+    async init() {
+      try {
+        this.mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: 1280, height: 720 },
+          audio: true
+        });
+        this.preview.srcObject = this.mediaStream;
+        this.recordBtn.disabled = false;
+        this.recordBtn.addEventListener('click', () => this.handleRecordClick());
+        this.retakeBtn.addEventListener('click', () => this.handleRetake());
+        this.previewBtn.addEventListener('click', () => this.handlePreview());
+      } catch (err) {
+        console.error('Camera access error:', err);
+        this.recordBtn.disabled = true;
+        this.showError('Camera access denied. Please enable camera permissions.');
+      }
+    }
+    
+    handleRecordClick() {
+      if (!this.isRecording) {
+        this.startCountdown();
+      } else {
+        this.stopRecording();
+      }
+    }
+    
+    async startCountdown() {
+      this.countdownOverlay.classList.add('active');
+      this.countdownValue = 3;
+      this.countdownNumber.textContent = this.countdownValue;
+      
+      const countdownInterval = setInterval(() => {
+        this.countdownValue--;
+        if (this.countdownValue > 0) {
+          this.countdownNumber.textContent = this.countdownValue;
+        } else {
+          clearInterval(countdownInterval);
+          this.countdownOverlay.classList.remove('active');
+          this.startRecording();
+        }
+      }, 1000);
+    }
+    
+    startRecording() {
+      this.chunks = [];
+      this.mediaRecorder = new MediaRecorder(this.mediaStream, {
+        mimeType: 'video/webm;codecs=vp9,opus'
+      });
+      
+      this.mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          this.chunks.push(e.data);
+        }
+      };
+      
+      this.mediaRecorder.onstop = () => {
+        const blob = new Blob(this.chunks, { type: 'video/webm' });
+        this.recordedVideo.src = URL.createObjectURL(blob);
+        this.videoBlob.value = 'video_recorded';
+        this.videoHidden.classList.add('active');
+        this.previewBtn.disabled = false;
+        this.retakeBtn.disabled = false;
+      };
+      
+      this.mediaRecorder.start();
+      this.isRecording = true;
+      this.recordBtn.classList.add('recording');
+      this.recordBtn.querySelector('span').textContent = 'Stop Recording';
+      this.recordingIndicator.classList.add('active');
+      this.recTimer.textContent = '00:00';
+      this.recordingTime = 0;
+      
+      this.timerInterval = setInterval(() => {
+        this.recordingTime++;
+        const minutes = Math.floor(this.recordingTime / 60).toString().padStart(2, '0');
+        const seconds = (this.recordingTime % 60).toString().padStart(2, '0');
+        this.recTimer.textContent = `${minutes}:${seconds}`;
+        
+        if (this.recordingTime >= this.maxDuration) {
+          this.stopRecording();
+        }
+      }, 1000);
+    }
+    
+    stopRecording() {
+      if (this.mediaRecorder && this.isRecording) {
+        this.mediaRecorder.stop();
+        this.isRecording = false;
+        this.recordBtn.classList.remove('recording');
+        this.recordBtn.querySelector('span').textContent = 'Record Statement';
+        this.recordingIndicator.classList.remove('active');
+        clearInterval(this.timerInterval);
+        this.checkRequirements();
+      }
+    }
+    
+    handleRetake() {
+      this.videoHidden.classList.remove('active');
+      this.recordedVideo.src = '';
+      this.retakeBtn.disabled = true;
+      this.previewBtn.disabled = true;
+      this.videoBlob.value = '';
+      this.resetRequirements();
+    }
+    
+    handlePreview() {
+      if (this.recordedVideo.src) {
+        this.recordedVideo.play();
+      }
+    }
+    
+    checkRequirements() {
+      const items = this.element.querySelectorAll('.checklist-item');
+      items.forEach(item => {
+        if (item.dataset.checked === 'false') {
+          item.dataset.checked = 'true';
+          item.classList.add('checked');
+          item.querySelector('.check-icon').textContent = '✓';
+        }
+      });
+    }
+    
+    resetRequirements() {
+      const items = this.element.querySelectorAll('.checklist-item');
+      items.forEach(item => {
+        item.dataset.checked = 'false';
+        item.classList.remove('checked');
+        item.querySelector('.check-icon').textContent = '○';
+      });
+    }
+    
+    showError(message) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = message;
+      this.element.prepend(errorDiv);
+    }
+  }
+  
+  document.querySelectorAll('.video-recorder').forEach(el => new VideoRecorder(el));
+</script>

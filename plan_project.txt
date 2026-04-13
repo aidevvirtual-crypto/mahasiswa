@@ -1,0 +1,55 @@
+Registration Form (Main Form)
+1. Personal Information
+* Full name 
+* NIK (KTP) 
+* Date of birth ? auto validate (18–25) 
+* Gender 
+* Phone number 
+* Email 
+2. Background Information
+* Status (dropdown): 
+o Mahasiswa 
+o Entrepreneur muda 
+o Umum 
+* If Mahasiswa: 
+o University name 
+o Upload KTM (file) 
+* If Entrepreneur: 
+o Business name 
+o Business description 
+o Upload proof of business (file) 
+* If Umum: 
+o Just proceed 
+3. Education
+* Last education: 
+o SMA / SMK / Sederajat (minimum enforced) 
+4. Proposal Submission
+* Upload proposal (PDF, max size defined) 
+* Optional: 
+o Proposal title 
+o Short summary (textarea) 
+5. Health & Compliance Declaration
+Checkboxes:
+* Sehat jasmani & rohani 
+* Bebas narkotika 
+* Bersedia mengikuti seluruh rangkaian program 
+6. Skills & Perspective
+A. Video Introduction (MANDATORY)
+Field:
+* Upload Video Perkenalan dan jawab pertanyaan 
+Requirements :
+* Duration: 1–2 minutes 
+* Format: MP4 / MOV 
+* Max size: (define, e.g. 100–150 MB) 
+* Content guideline: 
+o Perkenalan diri (nama, latar belakang) 
+o Aktivitas saat ini (mahasiswa / usaha / lainnya)
+
+* Short answer: 
+o “Pandangan Anda tentang industri/perkebunan/keberlanjutan” 
+* English proficiency: 
+o Basic / Intermediate / Advanced 
+7. Tattoo Declaration (Sensitive)
+Checkbox:
+* “Saya memenuhi ketentuan terkait tato/tindik sesuai persyaratan program” 
+8. Submit
