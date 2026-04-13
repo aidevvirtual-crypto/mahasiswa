@@ -1,17 +1,18 @@
 import { defineMiddleware } from 'astro:middleware';
 
 export const onRequest = defineMiddleware(async ({ cookies, locals, redirect, url }, next) => {
-  const currentPath = url.pathname;
+  // Normalize path (remove trailing slash except for root '/')
+  const currentPath = url.pathname.replace(/\/$/, '') || '/';
 
-  // Allow admin login page without session
-  if (currentPath === '/admin/login') {
+  // 1. ALLOW PUBLIC PAGES
+  if (currentPath === '/' || currentPath === '/admin/login' || currentPath.startsWith('/api/auth')) {
     return next();
   }
 
-  // Check admin_session for admin routes
+  // 2. PROTECT ADMIN SECTION
   if (currentPath.startsWith('/admin')) {
     const adminSessionCookie = cookies.get('admin_session');
-
+    
     if (adminSessionCookie) {
       try {
         const sessionData = JSON.parse(adminSessionCookie.value);
@@ -19,7 +20,7 @@ export const onRequest = defineMiddleware(async ({ cookies, locals, redirect, ur
 
         if (role === 'admin' && sessionId && userId) {
           const { db } = await import('./db');
-          const { sessions, users } = await import('./db/schema');
+          const { sessions } = await import('./db/schema');
           const { eq, and, gt } = await import('drizzle-orm');
 
           const validSession = await db.query.sessions.findFirst({
@@ -44,15 +45,12 @@ export const onRequest = defineMiddleware(async ({ cookies, locals, redirect, ur
         console.error('Admin session validation error:', err);
       }
       cookies.delete('admin_session', { path: '/' });
-      return redirect('/admin/login');
     }
-
     return redirect('/admin/login');
   }
 
-  // Check user session for register routes
+  // 3. PROTECT REGISTER SECTION (STUDENTS)
   const sessionCookie = cookies.get('session');
-
   if (sessionCookie) {
     try {
       const sessionData = JSON.parse(sessionCookie.value);
@@ -95,7 +93,6 @@ export const onRequest = defineMiddleware(async ({ cookies, locals, redirect, ur
     }
   }
 
-  // Protect register routes
   if (currentPath.startsWith('/register')) {
     if (!locals.user) {
       return redirect('/?error=unauthorized');
