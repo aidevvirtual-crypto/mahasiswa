@@ -53,7 +53,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       }), {
         path: '/',
         httpOnly: true,
-        secure: true,
+        secure: false,
         sameSite: 'lax',
         expires: sessionExpiry
       });
