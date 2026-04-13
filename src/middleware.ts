@@ -3,6 +3,11 @@ import { defineMiddleware } from 'astro:middleware';
 export const onRequest = defineMiddleware(async ({ cookies, locals, redirect, url }, next) => {
   const currentPath = url.pathname;
 
+  // Allow admin login page without session
+  if (currentPath === '/admin/login') {
+    return next();
+  }
+
   // Check admin_session for admin routes
   if (currentPath.startsWith('/admin')) {
     const adminSessionCookie = cookies.get('admin_session');
@@ -40,11 +45,6 @@ export const onRequest = defineMiddleware(async ({ cookies, locals, redirect, ur
       }
       cookies.delete('admin_session', { path: '/' });
       return redirect('/admin/login');
-    }
-
-    // Allow access to admin login page without session
-    if (currentPath === '/admin/login') {
-      return next();
     }
 
     return redirect('/admin/login');
