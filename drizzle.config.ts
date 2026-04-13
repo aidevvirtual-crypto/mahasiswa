@@ -3,8 +3,8 @@ import type { Config } from 'drizzle-kit';
 export default {
   schema: './src/db/schema.ts',
   out: './drizzle',
-  dialect: 'mysql',
+  dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'mysql://root:@localhost:3306/mahasiswa'
+    url: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/mahasiswa'
   }
 } satisfies Config;

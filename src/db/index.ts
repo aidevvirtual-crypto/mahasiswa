@@ -1,13 +1,10 @@
-import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import pg from 'pg';
 import * as schema from './schema';
 
-const connection = await mysql.createConnection({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '',
-  database: 'mahasiswa'
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/mahasiswa',
+  ssl: true
 });
 
-export const db = drizzle(connection, { schema, mode: 'default' });
+export const db = drizzle(pool, { schema });

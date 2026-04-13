@@ -1,18 +1,18 @@
-import { mysqlTable, varchar, text, timestamp, int, boolean, json } from 'drizzle-orm/mysql-core';
+import { pgTable, varchar, text, timestamp, integer, boolean, uuid } from 'drizzle-orm/pg-core';
 
-export const users = mysqlTable('users', {
-  id: varchar('id', { length: 36 }).primaryKey(),
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   name: varchar('name', { length: 255 }).notNull(),
   picture: varchar('picture', { length: 500 }),
   role: varchar('role', { length: 20 }).notNull().default('user'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const registrations = mysqlTable('registrations', {
-  id: varchar('id', { length: 36 }).primaryKey(),
-  userId: varchar('user_id', { length: 36 }).notNull().references(() => users.id),
+export const registrations = pgTable('registrations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id),
   nik: varchar('nik', { length: 20 }),
   dateOfBirth: varchar('date_of_birth', { length: 10 }),
   status: varchar('status', { length: 20 }).notNull().default('draft'),
@@ -22,30 +22,30 @@ export const registrations = mysqlTable('registrations', {
   businessName: varchar('business_name', { length: 255 }),
   businessAddress: text('business_address'),
   proposalPath: varchar('proposal_path', { length: 500 }),
-  step: int('step').notNull().default(1),
+  step: integer('step').notNull().default(1),
   submittedAt: timestamp('submitted_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const portfolioAssets = mysqlTable('portfolio_assets', {
-  id: varchar('id', { length: 36 }).primaryKey(),
-  registrationId: varchar('registration_id', { length: 36 }).notNull().references(() => registrations.id),
-  userId: varchar('user_id', { length: 36 }).notNull().references(() => users.id),
+export const portfolioAssets = pgTable('portfolio_assets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  registrationId: uuid('registration_id').notNull().references(() => registrations.id),
+  userId: uuid('user_id').notNull().references(() => users.id),
   type: varchar('type', { length: 20 }).notNull(),
   fileName: varchar('file_name', { length: 255 }).notNull(),
   filePath: varchar('file_path', { length: 500 }).notNull(),
   mimeType: varchar('mime_type', { length: 100 }).notNull(),
-  fileSize: int('file_size').notNull(),
+  fileSize: integer('file_size').notNull(),
   magicBytes: varchar('magic_bytes', { length: 50 }),
   uploadStatus: varchar('upload_status', { length: 20 }).notNull().default('pending'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const sessions = mysqlTable('sessions', {
-  id: varchar('id', { length: 36 }).primaryKey(),
-  userId: varchar('user_id', { length: 36 }).notNull().references(() => users.id),
-  token: varchar('token', { length: 500 }).notNull(),
+export const sessions = pgTable('sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  token: text('token').notNull(),
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
