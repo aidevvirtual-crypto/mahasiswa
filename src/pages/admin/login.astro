@@ -17,7 +17,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <p>Mahasiswa Registration System</p>
       </div>
       
-      <form class="login-form" method="POST" action="/api/admin/login">
+      <form id="admin-login-form" class="login-form">
         <div class="form-group">
           <label class="form-label" for="email">Email Address</label>
           <input type="email" id="email" name="email" class="form-input" required autocomplete="email" />
@@ -28,13 +28,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <input type="password" id="password" name="password" class="form-input" required autocomplete="current-password" />
         </div>
         
-        <div class="form-options">
-          <label class="remember-me">
-            <input type="checkbox" name="remember" />
-            <span>Keep me logged in</span>
-          </label>
-          <a href="/admin/forgot-password" class="forgot-link">Forgot password?</a>
-        </div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
         
         <button type="submit" class="btn btn-primary btn-login">Sign In</button>
       </form>
@@ -54,36 +48,43 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <div class="visual-content">
         <h2>Academic Registration Management</h2>
         <p>Review student applications, manage portfolios, and oversee the academic registration process.</p>
-        <div class="features-list">
-          <div class="feature-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="8.5" cy="7" r="4"/>
-              <polyline points="17 11 19 13 23 9"/>
-            </svg>
-            <span>Student Applications</span>
-          </div>
-          <div class="feature-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="23 7 16 12 23 17 23 7"/>
-              <rect x="1" y="5" width="15" height="14" rx="2"/>
-            </svg>
-            <span>Video Portfolios</span>
-          </div>
-          <div class="feature-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-            </svg>
-            <span>PDF Proposals</span>
-          </div>
-        </div>
       </div>
     </div>
   </main>
 </BaseLayout>
+
+<script>
+  const form = document.getElementById('admin-login-form') as HTMLFormElement;
+  const errorMsg = document.getElementById('error-message') as HTMLDivElement;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.style.display = 'none';
+
+    const email = (document.getElementById('email') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        window.location.href = '/admin/dashboard';
+      } else {
+        errorMsg.textContent = data.error || 'Invalid credentials';
+        errorMsg.style.display = 'block';
+      }
+    } catch (err) {
+      errorMsg.textContent = 'Connection error. Please try again.';
+      errorMsg.style.display = 'block';
+    }
+  });
+</script>
 
 <style>
   .login-page {
@@ -135,30 +136,41 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     margin-bottom: 32px;
   }
 
-  .form-options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
     font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 8px;
   }
 
-  .remember-me {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
+  .form-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--color-surface-container);
+    border: 1px solid var(--color-outline-variant);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    transition: all 0.2s ease;
   }
 
-  .remember-me input {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--color-primary);
+  .form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.1);
   }
 
-  .forgot-link {
-    color: var(--color-primary);
-    font-weight: 500;
+  .error-message {
+    background: rgba(186, 26, 26, 0.1);
+    color: var(--color-error);
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    margin-bottom: 16px;
   }
 
   .btn-login {
@@ -215,32 +227,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   .visual-content p {
     font-size: 1.0625rem;
     opacity: 0.9;
-    margin-bottom: 40px;
     line-height: 1.6;
-  }
-
-  .features-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    text-align: left;
-  }
-
-  .feature-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-md);
-    backdrop-filter: blur(10px);
-  }
-
-  .feature-item svg {
-    opacity: 0.9;
-  }
-
-  .feature-item span {
-    font-weight: 500;
   }
 </style>
