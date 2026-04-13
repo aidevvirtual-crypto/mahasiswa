@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, APP_URL, getGoogleTokenUrl, getGoogleUserInfoUrl } from '../../../lib/validation';
 import { db } from '../../../db';
-import { users } from '../../../db/schema';
+import { users, sessions } from '../../../db/schema';
 import { eq } from 'drizzle-orm';
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
@@ -73,6 +73,13 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     
     const sessionId = crypto.randomUUID();
     const sessionExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    
+    await db.insert(sessions).values({
+      id: sessionId,
+      userId: user!.id,
+      token: sessionId,
+      expiresAt: sessionExpiry
+    });
     
     cookies.set('session', JSON.stringify({
       userId: user!.id,

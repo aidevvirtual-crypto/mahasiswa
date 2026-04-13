@@ -1,5 +1,8 @@
 import type { APIRoute } from 'astro';
-import { getGoogleAuthUrl, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, APP_URL, getGoogleTokenUrl, getGoogleUserInfoUrl } from '../../../lib/validation';
+import { APP_URL, getGoogleAuthUrl, GOOGLE_CLIENT_ID } from '../../../lib/validation';
+import { db } from '../../../db';
+import { sessions } from '../../../db/schema';
+import { eq } from 'drizzle-orm';
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const action = url.searchParams.get('action');
@@ -14,6 +17,17 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   }
   
   if (action === 'logout') {
+    const sessionCookie = cookies.get('session');
+    if (sessionCookie) {
+      try {
+        const sessionData = JSON.parse(sessionCookie.value);
+        if (sessionData.sessionId) {
+          await db.delete(sessions).where(eq(sessions.id, sessionData.sessionId));
+        }
+      } catch (err) {
+        console.error('Logout session delete error:', err);
+      }
+    }
     cookies.delete('session', { path: '/' });
     return redirect('/');
   }
@@ -21,11 +35,22 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   return redirect('/');
 };
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const formData = await request.formData();
   const action = formData.get('action');
   
   if (action === 'logout') {
+    const sessionCookie = cookies.get('session');
+    if (sessionCookie) {
+      try {
+        const sessionData = JSON.parse(sessionCookie.value);
+        if (sessionData.sessionId) {
+          await db.delete(sessions).where(eq(sessions.id, sessionData.sessionId));
+        }
+      } catch (err) {
+        console.error('Logout session delete error:', err);
+      }
+    }
     cookies.delete('session', { path: '/' });
     return redirect('/');
   }

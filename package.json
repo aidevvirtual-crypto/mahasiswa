@@ -14,15 +14,15 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@astrojs/node": "^9.0.0",
-    "astro": "^5.0.0",
-    "drizzle-orm": "^0.45.2",
-    "pg": "^8.20.0",
+    "@astrojs/node": "^8.0.0",
+    "astro": "^4.16.0",
+    "drizzle-orm": "^0.36.0",
+    "mysql2": "^3.11.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "drizzle-kit": "^0.31.0",
+    "@types/node": "^20.0.0",
+    "drizzle-kit": "^0.28.0",
     "typescript": "^5.7.0"
   }
 }
