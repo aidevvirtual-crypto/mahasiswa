@@ -45,9 +45,9 @@ export function sanitizeFilename(filename: string): string {
     .substring(0, 255);
 }
 
-export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
-export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
-export const APP_URL = process.env.APP_URL || 'http://localhost:4321';
+export const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID || '';
+export const GOOGLE_CLIENT_SECRET = import.meta.env.GOOGLE_CLIENT_SECRET || '';
+export const APP_URL = import.meta.env.APP_URL || 'http://localhost:4321';
 
 export function getGoogleAuthUrl(): string {
   const redirectUri = `${APP_URL}/api/auth/callback`;

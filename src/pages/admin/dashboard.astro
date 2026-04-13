@@ -1,12 +1,34 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+import { registrations, users } from '../../db/schema';
+import { eq, desc, count } from 'drizzle-orm';
 
-const stats = {
-  total: 0,
-  pending: 0,
-  approved: 0,
-  rejected: 0
-};
+const user = Astro.locals.user;
+
+// Fetch stats
+const allRegistrations = await db.select().from(registrations);
+const total = allRegistrations.length;
+const pending = allRegistrations.filter(r => r.status === 'pending').length;
+const approved = allRegistrations.filter(r => r.status === 'approved').length;
+const rejected = allRegistrations.filter(r => r.status === 'rejected').length;
+
+// Fetch recent registrations with user info
+const recentRegs = await db.select({
+  id: registrations.id,
+  status: registrations.status,
+  registrationType: registrations.registrationType,
+  submittedAt: registrations.submittedAt,
+  createdAt: registrations.createdAt,
+  userName: users.name,
+  userEmail: users.email
+})
+.from(registrations)
+.leftJoin(users, eq(registrations.userId, users.id))
+.orderBy(desc(registrations.createdAt))
+.limit(10);
+
+const stats = { total, pending, approved, rejected };
 ---
 
 <BaseLayout title="Admin Dashboard | Mahasiswa">
@@ -33,15 +55,6 @@ const stats = {
           </svg>
           <span>Dashboard</span>
         </a>
-        <a href="/admin/students" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span>Students</span>
-        </a>
         <a href="/admin/registrations" class="nav-item">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -51,17 +64,10 @@ const stats = {
           </svg>
           <span>Registrations</span>
         </a>
-        <a href="/admin/settings" class="nav-item">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-          </svg>
-          <span>Settings</span>
-        </a>
       </nav>
       
       <div class="sidebar-footer">
-        <a href="/" class="nav-item">
+        <a href="/api/admin/logout" class="nav-item">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
@@ -76,16 +82,7 @@ const stats = {
       <header class="content-header">
         <div class="header-left">
           <h1>Dashboard</h1>
-          <p>Overview of registration applications</p>
-        </div>
-        <div class="header-right">
-          <div class="search-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input type="text" placeholder="Search students..." />
-          </div>
+          <p>Welcome back, {user?.name || 'Admin'}</p>
         </div>
       </header>
       
@@ -164,17 +161,38 @@ const stats = {
               </tr>
             </thead>
             <tbody id="applications-table">
-              <tr class="empty-state">
-                <td colspan="5">
-                  <div class="empty-content">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                    <p>No applications yet</p>
-                  </div>
-                </td>
-              </tr>
+              {recentRegs.length === 0 ? (
+                <tr class="empty-state">
+                  <td colspan="5">
+                    <div class="empty-content">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                      <p>No applications yet</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                recentRegs.map(reg => (
+                  <tr>
+                    <td>
+                      <div class="applicant-cell">
+                        <span class="applicant-name">{reg.userName || 'Unknown'}</span>
+                        <span class="applicant-email">{reg.userEmail || '-'}</span>
+                      </div>
+                    </td>
+                    <td class="capitalize">{reg.registrationType || '-'}</td>
+                    <td>
+                      <span class={`badge badge-${reg.status}`}>{reg.status}</span>
+                    </td>
+                    <td>{reg.submittedAt ? new Date(reg.submittedAt).toLocaleDateString() : '-'}</td>
+                    <td>
+                      <a href={`/admin/registrations/${reg.id}`} class="action-btn">View</a>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -240,6 +258,7 @@ const stats = {
     font-size: 0.9375rem;
     font-weight: 500;
     transition: all 0.2s ease;
+    text-decoration: none;
   }
 
   .nav-item:hover {
@@ -287,31 +306,6 @@ const stats = {
   .content-header p {
     color: var(--color-text-secondary);
     font-size: 0.9375rem;
-  }
-
-  .search-box {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
-    background: var(--color-surface);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-outline-variant);
-  }
-
-  .search-box svg {
-    color: var(--color-text-secondary);
-  }
-
-  .search-box input {
-    border: none;
-    background: transparent;
-    width: 200px;
-    font-size: 0.9375rem;
-  }
-
-  .search-box input:focus {
-    outline: none;
   }
 
   .stats-grid {
@@ -440,6 +434,24 @@ const stats = {
     color: var(--color-text);
   }
 
+  .capitalize {
+    text-transform: capitalize;
+  }
+
+  .applicant-cell {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .applicant-name {
+    font-weight: 500;
+  }
+
+  .applicant-email {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+  }
+
   .empty-state td {
     padding: 48px;
   }
@@ -461,6 +473,7 @@ const stats = {
     border-radius: var(--radius-full);
     font-size: 0.75rem;
     font-weight: 600;
+    text-transform: capitalize;
   }
 
   .badge-pending {
@@ -486,6 +499,7 @@ const stats = {
     color: var(--color-primary);
     border: 1px solid var(--color-outline-variant);
     cursor: pointer;
+    text-decoration: none;
   }
 
   .action-btn:hover {
