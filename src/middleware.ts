@@ -1,102 +1,41 @@
 import { defineMiddleware } from 'astro:middleware';
 
 export const onRequest = defineMiddleware(async ({ cookies, locals, redirect, url }, next) => {
-  // Normalize path (remove trailing slash except for root '/')
-  const currentPath = url.pathname.replace(/\/$/, '') || '/';
+  const path = url.pathname;
 
-  // 1. ALLOW PUBLIC PAGES
-  if (currentPath === '/' || currentPath === '/admin/login' || currentPath.startsWith('/api/auth')) {
+  // 1. Public Paths & API (Always allowed)
+  if (path === '/' || path === '/admin/login' || path.startsWith('/api/')) {
     return next();
   }
 
-  // 2. PROTECT ADMIN SECTION
-  if (currentPath.startsWith('/admin')) {
-    const adminSessionCookie = cookies.get('admin_session');
-    
-    if (adminSessionCookie) {
+  // 2. Admin Protection
+  if (path.startsWith('/admin')) {
+    const adminSession = cookies.get('admin_session');
+    if (adminSession) {
       try {
-        const sessionData = JSON.parse(adminSessionCookie.value);
-        const { userId, sessionId, role } = sessionData;
-
-        if (role === 'admin' && sessionId && userId) {
-          const { db } = await import('./db');
-          const { sessions } = await import('./db/schema');
-          const { eq, and, gt } = await import('drizzle-orm');
-
-          const validSession = await db.query.sessions.findFirst({
-            where: and(
-              eq(sessions.id, sessionId),
-              eq(sessions.userId, userId),
-              gt(sessions.expiresAt, new Date())
-            )
-          });
-
-          if (validSession) {
-            locals.user = {
-              id: userId,
-              email: sessionData.email,
-              name: sessionData.name,
-              role: role
-            };
-            return next();
-          }
+        const data = JSON.parse(adminSession.value);
+        if (data.role === 'admin' && data.sessionId) {
+          locals.user = data;
+          return next();
         }
-      } catch (err) {
-        console.error('Admin session validation error:', err);
-      }
-      cookies.delete('admin_session', { path: '/' });
+      } catch (e) {}
     }
     return redirect('/admin/login');
   }
 
-  // 3. PROTECT REGISTER SECTION (STUDENTS)
-  const sessionCookie = cookies.get('session');
-  if (sessionCookie) {
-    try {
-      const sessionData = JSON.parse(sessionCookie.value);
-      const { userId, sessionId } = sessionData;
-
-      if (sessionId && userId) {
-        const { db } = await import('./db');
-        const { sessions, users } = await import('./db/schema');
-        const { eq, and, gt } = await import('drizzle-orm');
-
-        const validSession = await db.query.sessions.findFirst({
-          where: and(
-            eq(sessions.id, sessionId),
-            eq(sessions.userId, userId),
-            gt(sessions.expiresAt, new Date())
-          )
-        });
-
-        if (validSession) {
-          const user = await db.query.users.findFirst({
-            where: eq(users.id, userId)
-          });
-
-          if (user) {
-            locals.user = {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              picture: user.picture,
-              role: user.role
-            };
-          }
-        } else {
-          cookies.delete('session', { path: '/' });
+  // 3. Student Registration Protection
+  if (path.startsWith('/register')) {
+    const userSession = cookies.get('session');
+    if (userSession) {
+      try {
+        const data = JSON.parse(userSession.value);
+        if (data.userId && data.sessionId) {
+          locals.user = data;
+          return next();
         }
-      }
-    } catch (err) {
-      console.error('Session validation error:', err);
-      cookies.delete('session', { path: '/' });
+      } catch (e) {}
     }
-  }
-
-  if (currentPath.startsWith('/register')) {
-    if (!locals.user) {
-      return redirect('/?error=unauthorized');
-    }
+    return redirect('/?error=unauthorized');
   }
 
   return next();
